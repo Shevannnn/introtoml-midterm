@@ -36,15 +36,16 @@ import tensorflow as tf
 from tensorflow.keras.preprocessing import image
 from sklearn.metrics import f1_score, precision_score, confusion_matrix,accuracy_score, classification_report
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 # Load the model
-model = tf.keras.models.load_model(r"midterm_v4.keras")
+model = tf.keras.models.load_model(r"C:\Users\evane\models\midterms\midterm_v8.h5")
 
 # Define base image folder
 base_folder = r"C:\Users\evane\Downloads\Tests"
 
 # Label mapping
-label_map = {"Car": 0, "Truck": 1}
+label_map = {"Car": 0, "SUV": 1}
 
 # Prepare data
 y_true = []
@@ -70,24 +71,28 @@ for label_name, label_value in label_map.items():
         pred_value = float(prediction[0][0])
         pred_label = 1 if pred_value >= 0.5 else 0
 
-        label = "Sedan" if pred_label == 0 else "SUV/Pickup Truck"
+        label = "Sedan" if pred_label == 0 else "SUV"
         confidence = pred_value if pred_label == 1 else 1 - pred_value
 
         y_true.append(label_value)
         y_pred.append(pred_label)
 
         # Print result
-        print(f"{img_name}: {label} ({confidence * 100:.2f}% confidence)\n")
+        print(f"{img_name}: {label} ({confidence * 100:.2f}% confidence)")
 
 
 accuracy = accuracy_score(y_true, y_pred)
 precision = precision_score(y_true, y_pred)
 f1 = f1_score(y_true, y_pred)
-report = classification_report(y_true, y_pred, target_names=["Sedan", "SUV/Pickup Trucks"])
-
-print(f"\nAccuracy: {accuracy:.2f}")
-print(f"Precision: {precision:.2f}")
-print(f"F1 Score: {f1:.2f}\n")
+report = classification_report(y_true, y_pred, target_names=["Sedan", "SUV"])
 
 print("Classification Report: ")
 print(report)
+
+cm = confusion_matrix(y_true, y_pred)
+plt.figure(figsize=(6,5))
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=["Car", "SUV"], yticklabels=["Car", "SUV"])
+plt.xlabel('Predicted')
+plt.ylabel('Actual')
+plt.title('Confusion Matrix')
+plt.show()
