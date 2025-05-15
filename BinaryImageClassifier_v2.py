@@ -24,7 +24,7 @@ test_dir = os.path.join(base_dir, "test")
 
 # Image settings
 img_size = (128, 128)
-batch_size = 32
+batch_size = 64
 
 # Data generators
 datagen = ImageDataGenerator(rescale=1./255)
@@ -67,20 +67,38 @@ model = Sequential([
     BatchNormalization(),
     MaxPooling2D(pool_size=(2,2)),
 
+    Conv2D(518, (3,3), activation='relu'),
+    BatchNormalization(),
+    MaxPooling2D(pool_size=(2,2)),
+    
+    Conv2D(1024, (3,3), activation='relu'),
+    BatchNormalization(),
+    MaxPooling2D(pool_size=(2,2)),
+
     Flatten(),
     Dense(512, activation='relu'),
-    Dropout(0.5),
+    Dropout(0.4),
     Dense(256, activation='relu'),
-    Dropout(0.3),
+    Dropout(0.2),
     Dense(1, activation='sigmoid')
 ])
 
-optimizer = tf.keras.optimizers.Adam(learning_rate=0.0001)
+optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
 
 model.compile(optimizer=optimizer, loss='binary_crossentropy', metrics=['accuracy'])
 
-# Train model
-model.fit(train_gen, validation_data=val_gen, epochs=10)
+early_stop = tf.keras.callbacks.EarlyStopping(
+    monitor='val_loss',     # watch validation loss
+    patience=3,             # stop after 3 epochs with no improvement
+    restore_best_weights=True
+)
+
+model.fit(
+    train_gen,
+    validation_data=val_gen,
+    epochs=10,
+    callbacks=[early_stop] 
+)
 
 def evaluate_model(model, test_gen):
     # Get true labels and predicted probabilities
@@ -114,7 +132,11 @@ def evaluate_model(model, test_gen):
 evaluate_model(model, test_gen)
 
 # Save the model
-model.save("midterm_v7.h5")
+if platform.system() == 'Linux':
+    model.save("/mnt/c/Users/evane/models/midterms/midterm_v8.h5")
+else:
+    model.save(r"C:\Users\evane\models\midterms\midterm_v8.h5")
+
 print("Training complete! Model saved.")
 
 # Final evaluation on test set only
